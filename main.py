@@ -53,14 +53,20 @@ def setup_mode():
 
 def application_mode():
     print("Entering application mode.")
+    onboard_led = machine.Pin("LED", machine.Pin.OUT)
 
     def app_index(request):
         return render_template(f"{APP_TEMPLATE_PATH}/index.html")
+
+    def app_toggle_led(request):
+        onboard_led.toggle()
+        return "OK"
 
     def app_catch_all(request):
         return "Not found.", 404
 
     server.add_route("/", handler = app_index, methods = ["GET"])
+    server.add_route("/toggle", handler = app_toggle_led, methods = ["GET"])
     # Add other routes for your application...
     server.set_callback(app_catch_all)
 
@@ -77,6 +83,7 @@ try:
             # Bad configuration, delete the credentials file, reboot
             # into setup mode to get new credentials from the user.
             print("Bad wifi connection!")
+            print(wifi_credentials)
             os.remove(WIFI_FILE)
             machine_reset()
 
