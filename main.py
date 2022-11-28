@@ -1,30 +1,45 @@
-from phew import access_point, is_connected_to_wifi, dns, server
-from phew.server import redirect
+from phew import access_point, connect_to_wifi, is_connected_to_wifi, dns, server
 from phew.template import render_template
-from os import stat
+import json
+import machine
+import os
+import utime
+import _thread
 
 AP_NAME = "pi pico"
 AP_DOMAIN = "pipico.net"
+AP_TEMPLATE_PATH = "ap_templates"
+APP_TEMPLATE_PATH = "app_templates"
 WIFI_FILE = "wifi.json"
+
+def machine_reset():
+    utime.sleep(1)
+    print("Resetting...")
+    machine.reset()
 
 def setup_mode():
     print("Entering setup mode...")
     
     def ap_index(request):
         if request.headers.get("host") != AP_DOMAIN:
-            return render_template("redirect.html", domain = AP_DOMAIN)
+            return render_template(f"{AP_TEMPLATE_PATH}/redirect.html", domain = AP_DOMAIN)
 
-        return render_template("index.html")
+        return render_template(f"{AP_TEMPLATE_PATH}/index.html")
 
     def ap_configure(request):
-        print("Request data...")
-        print(request.form)
-        # TODO persist this in the right place, then reboot...
-        return render_template("configured.html", ssid = request.form["ssid"])
+        print("Saving wifi credentials...")
 
+        with open(WIFI_FILE, "w") as f:
+            json.dump(request.form, f)
+            f.close()
+
+        # Reboot from new thread after we have responded to the user.
+        _thread.start_new_thread(machine_reset, ())
+        return render_template(f"{AP_TEMPLATE_PATH}/configured.html", ssid = request.form["ssid"])
+        
     def ap_catch_all(request):
         if request.headers.get("host") != AP_DOMAIN:
-            return render_template("redirect.html", domain = AP_DOMAIN)
+            return render_template(f"{AP_TEMPLATE_PATH}/redirect.html", domain = AP_DOMAIN)
 
         return "Not found.", 404
 
@@ -36,15 +51,42 @@ def setup_mode():
     ip = ap.ifconfig()[0]
     dns.run_catchall(ip)
 
-# TODO check for a wifi.json file or something and load secrets from 
-# that if it is there, then connect to wifi and add different routes.
-# if no wifi.py then go with the captive portal routes you see below.
+def application_mode():
+    print("Entering application mode.")
 
+    def app_index(request):
+        return render_template(f"{APP_TEMPLATE_PATH}/index.html")
+
+    def app_catch_all(request):
+        return "Not found.", 404
+
+    server.add_route("/", handler = app_index, methods = ["GET"])
+    # Add other routes for your application...
+    server.set_callback(app_catch_all)
+
+# Figure out which mode to start up in...
 try:
-    stat(WIFI_FILE)
-    # TODO load wifi stuff and make a connection...
-except OSError:
-    # No wifi configuration, so go to setup mode...
+    os.stat(WIFI_FILE)
+
+    # File was found, attempt to connect to wifi...
+    with open(WIFI_FILE) as f:
+        wifi_credentials = json.load(f)
+        ip_address = connect_to_wifi(wifi_credentials["ssid"], wifi_credentials["password"])
+
+        if not is_connected_to_wifi():
+            # Bad configuration, delete the credentials file, reboot
+            # into setup mode to get new credentials from the user.
+            print("Bad wifi connection!")
+            os.remove(WIFI_FILE)
+            machine_reset()
+
+        print(f"Connected to wifi, IP address {ip_address}")
+        application_mode()
+
+except Exception:
+    # Either no wifi configuration file found, or something went wrong, 
+    # so go into setup mode.
     setup_mode()
 
+# Start the web server...
 server.run()
