@@ -81,7 +81,23 @@ If you made a mistake when providing your wifi credentials, the Pi Pico W will t
 
 ## Code Walkthrough
 
-TODO
+Here's a high level run through of how the code works.
+
+When the Pi Pico W starts up, it starts the MicroPython runtime which then runs the code in `main.py`.  The first thing that happens is that we check for the presence of the wifi configuration file using `os.stat`.
+
+If thie file is found, it is assumed to be a JSOM file containing keys `ssid` and `password`.  The following actions are then taken:
+
+*  The file is read, and these values are used to attemmpt to connect to the wifi network.
+* If the connection is successful, the device's new IP address is printed to the console and the logic in the function named `application_mode` is run.  If you are making a device with an attached display, you should show this on the display so that the user can connect to it if your application uses a web display.
+* If the device fails to connect, for example because the wifi isn't reachable or the user provided incorrect credentials, then the wifi configuration file is deleted and the device reboots.  This will put it in access point mode to allow the user to try and configure the wifi again.
+
+If the wifi configuration file isn't found, the device is either being started for the first time, or a previous attempt to configure the wifi failed.  In this case, the following happens:
+
+* The logic in the function named `setup_mode` is run.
+* A Phew! web server is configured with the routes we need to prompt the user for thr wifi details and capture them, plus a catch all route to redirect web requests to the configuration screen.
+* We put the Pi Pico W into captive access point wifi mode, using the value of `AP_NAME` as the SSID for the user to connect to.  This is part of the Phew! framework ([read about it here](https://github.com/pimoroni/phew#access_point))
+* A fake DNS server is run to resolve all DNS requests.  This is part of the Phew! framework ([read about it here](https://github.com/pimoroni/phew#dns-module)).
+* The code in the function `ap_index` ensures that the contents of `ap_templates/index.html` are served whenever a browser asks for the root page. This contains a form whose submit acion goes to `/configure` and triggers the code in the `ap_configure` function.  This function saves the values submitted from the form into a file called `wifi.json`, tells the user that the credentials have been saved and reboots the device.  The device is rebooted in a background thread a second later, allowing time for the page template to be rendered and returned to the user.
 
 ## Adapt this for your own Application
 
