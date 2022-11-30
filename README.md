@@ -85,4 +85,16 @@ TODO
 
 ## Adapt this for your own Application
 
-TODO
+This is intended as a basic demo of how to get a Pi Pico W up and running on a wifi network, so that you can ship products on them to people who can then connect them to their networks without any coding skills required.
+
+To use this as the basis of your own application, you'll want to:
+
+* Change the templates in `ap_templates` to ask the user for any additional information that you require from them.  For example your application may use an API that requires an access key that the user has to provide.
+* Change the templates in `app_templates` for ones that represent your application's web front end.  If your application doesn't have a web front end, you can remove these.
+* Change the code in `main.py` so that it:
+    * Makes use of any additional data items that you asked the user for.
+    * Implements your application logic in the `application_mode` function, including any additional web listener routes.  The [Phew! documentation](https://github.com/pimoroni/phew) will be helpful here.
+
+What sort of thing could you build?  This probably depends on what you plan to attach to your Pi Pico W. for example, you might build a [Cheerlights](https://cheerlights.com/) display with an LED matrix, or a weather station with an e-ink screen and various environment sensors.
+
+If you build anything using this, I'd love to see it!
