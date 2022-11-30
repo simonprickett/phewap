@@ -43,11 +43,41 @@ code .
 
 ## Install and Run the Software on the Raspberry Pi Pico W
 
-TODO
+I'm using VS Code for this.  Whichever editor you use, you'll need to have first installed the MicroPython runtime on the Raspberry Pi Pico W (see earlier instructions).
+
+With the folder that you cloned this repository into open in VS Code, plug the micro USB end of your cable into the Raspberry Pi Pico W and the USB A or C end of your cable into the machine that's running VS Code.
+
+Connect to the Pi Pico W from VS Code by clicking the "Pico W Disconnected" button in the editor's footer bar.  Wait for this to change to "Pico W Connected".
+
+Now, copy the project files to the Pi Pico W.  Click on "All Commands" in the editor's footer bar, and select "Pico-W-Go > Upload project".  This copies all of the project files to the device and resets it.  It will then start running the project.
+
+To see the logs in VS Code's built in Terminal, click the "Pico W Disconnected" button to reconnect.
 
 ## Connect to the Access Point and Configure the Wifi
 
-TODO
+When the software first runs, it exposes a wifi access point for the user to connect to.  The access point is called "pi pico" (you can change this in the code if you like) and it doesn't require a password.  
+
+Using a wifi capable device (your phone, tablet, another computer etc), connect to the "pi pico" wifi network.  
+
+Your device may automatically pop up a web page served to it by the Pi Pico W.  Use the form on this page to provide your wifi network's SSID and password then click "Save".
+
+If you don't automatically see the web page, open your device's browser and navigate to `http://pipico.net`
+
+Here's what the page looks like on an iPhone:
+
+![Wifi setup page](wifi_setup.jpg)
+
+Once you hit "Save", the Pi Pico W will reset and attempt to connect to your wifi:
+
+![Wifi configured](wifi_configured.jpg)
+
+If it succeeds, it will log its IP address to the console (connect to the Pi Pico W from VS Code to see this).  Using any other device that's connected to the same wifi network, browse to `http://<device ip address>` to see the application home page:
+
+![Demo application page](demo_application.jpg)
+
+Use the "Toggle LED" button to toggle the onboard LED on the Pi Pico W board.  The application code now also has access to the internet via your wifi network.
+
+If you made a mistake when providing your wifi credentials, the Pi Pico W will try and connect then swap back to exposing the "pi pico" access point so that you can try again.
 
 ## Code Walkthrough
 
