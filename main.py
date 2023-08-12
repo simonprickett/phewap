@@ -61,12 +61,25 @@ def application_mode():
     def app_toggle_led(request):
         onboard_led.toggle()
         return "OK"
+    
+    def app_get_temperature(request):
+        # Not particularly reliable but uses built in hardware.
+        # Demos how to incorporate senasor data into this application.
+        # The front end polls this route and displays the output.
+        # Replace code here with something else for a 'real' sensor.
+        # Algorithm used here is from:
+        # https://www.coderdojotc.org/micropython/advanced-labs/03-internal-temperature/
+        sensor_temp = machine.ADC(4)
+        reading = sensor_temp.read_u16() * (3.3 / (65535))
+        temperature = 27 - (reading - 0.706)/0.001721
+        return f"{round(temperature, 1)}"
 
     def app_catch_all(request):
         return "Not found.", 404
 
     server.add_route("/", handler = app_index, methods = ["GET"])
     server.add_route("/toggle", handler = app_toggle_led, methods = ["GET"])
+    server.add_route("/temperature", handler = app_get_temperature, methods = ["GET"])
     # Add other routes for your application...
     server.set_callback(app_catch_all)
 
