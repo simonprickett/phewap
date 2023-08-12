@@ -11,6 +11,7 @@ AP_DOMAIN = "pipico.net"
 AP_TEMPLATE_PATH = "ap_templates"
 APP_TEMPLATE_PATH = "app_templates"
 WIFI_FILE = "wifi.json"
+WIFI_MAX_ATTEMPTS = 3
 
 def machine_reset():
     utime.sleep(1)
@@ -89,19 +90,28 @@ try:
 
     # File was found, attempt to connect to wifi...
     with open(WIFI_FILE) as f:
+        wifi_current_attempt = 1
         wifi_credentials = json.load(f)
-        ip_address = connect_to_wifi(wifi_credentials["ssid"], wifi_credentials["password"])
+        
+        while (wifi_current_attempt < WIFI_MAX_ATTEMPTS):
+            ip_address = connect_to_wifi(wifi_credentials["ssid"], wifi_credentials["password"])
 
-        if not is_connected_to_wifi():
+            if is_connected_to_wifi():
+                print(f"Connected to wifi, IP address {ip_address}")
+                break
+            else:
+                wifi_current_attempt += 1
+                
+        if is_connected_to_wifi():
+            application_mode()
+        else:
+            
             # Bad configuration, delete the credentials file, reboot
             # into setup mode to get new credentials from the user.
             print("Bad wifi connection!")
             print(wifi_credentials)
             os.remove(WIFI_FILE)
             machine_reset()
-
-        print(f"Connected to wifi, IP address {ip_address}")
-        application_mode()
 
 except Exception:
     # Either no wifi configuration file found, or something went wrong, 
