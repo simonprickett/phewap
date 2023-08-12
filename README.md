@@ -87,7 +87,7 @@ Here's a high level run through of how the code works.
 
 When the Pi Pico W starts up, it starts the MicroPython runtime which then runs the code in `main.py`.  The first thing that happens is that we check for the presence of the wifi configuration file using `os.stat`.
 
-If thie file is found, it is assumed to be a JSOM file containing keys `ssid` and `password`.  The following actions are then taken:
+If thie file is found, it is assumed to be a JSON file containing keys `ssid` and `password`.  The following actions are then taken:
 
 *  The file is read, and these values are used to attemmpt to connect to the wifi network.
 * If the connection is successful, the device's new IP address is printed to the console and the logic in the function named `application_mode` is run.  If you are making a device with an attached display, you should show this on the display so that the user can connect to it if your application uses a web display.
