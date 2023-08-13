@@ -46,7 +46,6 @@ cd phewap
 code .
 ```
 
-
 ## Install and Run the Software on the Raspberry Pi Pico W
 
 I'm using VS Code for this.  Whichever editor you use, you'll need to have first installed the MicroPython runtime on the Raspberry Pi Pico W (see earlier instructions).
@@ -81,7 +80,11 @@ If it succeeds, it will log its IP address to the console (connect to the Pi Pic
 
 ![Demo application page](demo_application.jpg)
 
-Use the "Toggle LED" button to toggle the onboard LED on the Pi Pico W board.  The application code now also has access to the internet via your wifi network.  The internal temperature displayed updates automatically every few seconds.
+Use the "Toggle LED" button to toggle the onboard LED on the Pi Pico W board.  The application code now also has access to the internet via your wifi network.  The internal temperature displayed updates automatically every few seconds.  
+
+Use the "Reset Wifi" button to delete the stored wifi credentials and reboot the Pi Pico W back into access point mode... for example when you are visiting somewhere new and need to change the wifi credentials.
+
+![Wifi reset page](resetting.jpg)
 
 If you made a mistake when providing your wifi credentials, the Pi Pico W will try and connect then swap back to exposing the "pi pico" access point so that you can try again.
 
@@ -93,7 +96,7 @@ When the Pi Pico W starts up, it starts the MicroPython runtime which then runs 
 
 If thie file is found, it is assumed to be a JSON file containing keys `ssid` and `password`.  The following actions are then taken:
 
-*  The file is read, and these values are used to attemmpt to connect to the wifi network.
+*  The file is read, and these values are used to attempt to connect to the wifi network.
 * If the connection is successful, the device's new IP address is printed to the console and the logic in the function named `application_mode` is run.  If you are making a device with an attached display, you should show this on the display so that the user can connect to it if your application uses a web display.
 * If the device fails to connect, for example because the wifi isn't reachable or the user provided incorrect credentials, then the wifi configuration file is deleted and the device reboots.  This will put it in access point mode to allow the user to try and configure the wifi again.  I added a retry loop to try the connection up to three times as I noticed sometimes it times out on a first attempt (maybe time to start the hardware and scan for the SSID).
 
@@ -117,6 +120,7 @@ To use this as the basis of your own application, you'll want to:
     * Makes use of any additional data items that you asked the user for.
     * Implements your application logic in the `application_mode` function, including any additional web listener routes.  The [Phew! documentation](https://github.com/pimoroni/phew) will be helpful here.
 * Change the code for the `/temperature` route in `main.py` (function name is `app_get_temperature`).  Modify this to connect to a real sensor, rename it, make it do what you like!  Check out the embedded JavaScript in `app_templates/index.html` to see how the front end polls this route periodically.
+* You might want to protect the route `/reset` in `main.py` (function name is `app_reset`).  Right now anyone can reset the wifi credentials!
 
 What sort of thing could you build?  This probably depends on what you plan to attach to your Pi Pico W. for example, you might build a [Cheerlights](https://cheerlights.com/) display with an LED matrix, or a weather station with an e-ink screen and various environment sensors.
 

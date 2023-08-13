@@ -74,6 +74,14 @@ def application_mode():
         reading = sensor_temp.read_u16() * (3.3 / (65535))
         temperature = 27 - (reading - 0.706)/0.001721
         return f"{round(temperature, 1)}"
+    
+    def app_reset(request):
+        # Deleting the WIFI configuration file will cause the device to reboot as
+        # the access point and request new configuration.
+        os.remove(WIFI_FILE)
+        # Reboot from new thread after we have responded to the user.
+        _thread.start_new_thread(machine_reset, ())
+        return render_template(f"{APP_TEMPLATE_PATH}/reset.html", access_point_ssid = AP_NAME)
 
     def app_catch_all(request):
         return "Not found.", 404
@@ -81,6 +89,7 @@ def application_mode():
     server.add_route("/", handler = app_index, methods = ["GET"])
     server.add_route("/toggle", handler = app_toggle_led, methods = ["GET"])
     server.add_route("/temperature", handler = app_get_temperature, methods = ["GET"])
+    server.add_route("/reset", handler = app_reset, methods = ["GET"])
     # Add other routes for your application...
     server.set_callback(app_catch_all)
 
