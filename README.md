@@ -4,13 +4,17 @@ This repository contains a demo [MicroPython](https://micropython.org/) applicat
 
 The demo works by first exposing a captive wifi access point.  The user uses a device such as their phone, tablet or laptop to connect to that access point, and is presented with a web page asking them to input their wifi network SSID and password.
 
-[Watch a full walk through of this project on YouTube here](https://www.youtube.com/watch?v=Gzp9nLkqadg&t=22s).
+[Watch a full walk through of this project on YouTube here](https://www.youtube.com/watch?v=Gzp9nLkqadg&t=22s).  (This video was made before the temperature display was added to the front end).
 
-These credentials are saved as a file on the Pi Pico W which then reboots and attempts to connect to the network.  If a connection to the network is made, the device runs your application.  If the supplied wifi credentials were incorrect, it goes back into access point mode and the user can try to enter updated credentials.
+These credentials are saved as a file on the Pi Pico W which then reboots and attempts to connect to the network.  If a connection to the network is made, the device runs your application.  If the supplied wifi credentials were incorrect, it retries the connection a few times (sometimes connecting from "cold" can be slow) then goes back into access point mode and the user can try to enter updated credentials.
 
-In this demonstration, the application that the device runs presents a simple web front end with a button on it that the user can use to toggle the Pi Pico W's onboard LED.  The user accesses the front end by browsing to the device's IP address.  When the device successfully connects to the network, it logs the IP address to the console using a `print` statement.  Ideally it should show this on a connected display so that the user knows which IP address to use in order to connect to the application's front end.  If your application doesn't rely on a web front end, then this bit of information doesn't necessarily need to be communicated to the user. 
+In this demonstration, the application that the device runs presents a simple web front end with a button on it that the user can use to toggle the Pi Pico W's onboard LED.  It also display's the Pico's internal temperature using the (not very accurate) sort of temperature sensor ([read about this here](https://www.coderdojotc.org/micropython/advanced-labs/03-internal-temperature/)).
+
+The user accesses the front end by browsing to the device's IP address.  When the device successfully connects to the network, it logs the IP address to the console using a `print` statement.  Ideally it should show this on a connected display so that the user knows which IP address to use in order to connect to the application's front end.  If your application doesn't rely on a web front end, then this bit of information doesn't necessarily need to be communicated to the user. 
 
 I created this demo after reading Kevin McAleer's article about how to set up an access point with Phew! ([read on Kev's website](https://www.kevsrobots.com/blog/phew-access-point.html)).
+
+This has been tested using Pimoroni's 1.20.4 MicroPython build ([available here](https://github.com/pimoroni/pimoroni-pico/releases/tag/v1.20.4)) but it should work on any 1.20 build of MicroPython as it doesn't use Pimoroni specific libraries.
 
 ## Shopping List
 
@@ -19,7 +23,7 @@ To follow along, you'll need some things that cost money, and others that you ma
 * A laptop or desktop computer (could be a Mac, Windows or even a regular Raspberry Pi) to run a code editor on and install files to the Pi Pico W from.
 * A [Raspberry Pi Pico W](https://shop.pimoroni.com/products/raspberry-pi-pico-w?variant=40059369619539) (it must be the W version, other versions don't have wifi!)
 * A cable to connect the Raspberry Pi Pico W to your development machine.  It will need a micro USB connection at the Pico end, and either a USB A or C at the other end.  For example [something like this](https://shop.pimoroni.com/products/usb-a-to-microb-cable-black?variant=31241639498).  Make sure your cable provides both data and charging.  A charge only cable won't work when it comes to copying files to the Pi Pico W.
-* A copy of the MicroPython runtime for the Pi Pico W.  You can download the latest .uf2 file [here](https://micropython.org/download/rp2-pico-w/rp2-pico-w-latest.uf2).  Just save it somewhere on your machine for now.
+* A copy of the MicroPython runtime for the Pi Pico W.  You can download the latest .uf2 file [here](https://micropython.org/download/rp2-pico-w/rp2-pico-w-latest.uf2).  Just save it somewhere on your machine for now.  As I knew I'd want to add some sensors etc that Pimoroni provides drivers for, I used their MicroPython build [here](https://github.com/pimoroni/pimoroni-pico/releases/tag/v1.20.4).
 * A code editor that can connect to the Pi Pico W and copy files to it.  I use [VS Code](https://code.visualstudio.com/) with the [Pico W Go extension](https://marketplace.visualstudio.com/items?itemName=paulober.pico-w-go), you could also use [Thonny](https://thonny.org/).
 
 ## Raspberry Pi Pico W Setup
@@ -77,7 +81,7 @@ If it succeeds, it will log its IP address to the console (connect to the Pi Pic
 
 ![Demo application page](demo_application.jpg)
 
-Use the "Toggle LED" button to toggle the onboard LED on the Pi Pico W board.  The application code now also has access to the internet via your wifi network.
+Use the "Toggle LED" button to toggle the onboard LED on the Pi Pico W board.  The application code now also has access to the internet via your wifi network.  The internal temperature displayed updates automatically every few seconds.
 
 If you made a mistake when providing your wifi credentials, the Pi Pico W will try and connect then swap back to exposing the "pi pico" access point so that you can try again.
 
@@ -91,7 +95,7 @@ If thie file is found, it is assumed to be a JSON file containing keys `ssid` an
 
 *  The file is read, and these values are used to attemmpt to connect to the wifi network.
 * If the connection is successful, the device's new IP address is printed to the console and the logic in the function named `application_mode` is run.  If you are making a device with an attached display, you should show this on the display so that the user can connect to it if your application uses a web display.
-* If the device fails to connect, for example because the wifi isn't reachable or the user provided incorrect credentials, then the wifi configuration file is deleted and the device reboots.  This will put it in access point mode to allow the user to try and configure the wifi again.
+* If the device fails to connect, for example because the wifi isn't reachable or the user provided incorrect credentials, then the wifi configuration file is deleted and the device reboots.  This will put it in access point mode to allow the user to try and configure the wifi again.  I added a retry loop to try the connection up to three times as I noticed sometimes it times out on a first attempt (maybe time to start the hardware and scan for the SSID).
 
 If the wifi configuration file isn't found, the device is either being started for the first time, or a previous attempt to configure the wifi failed.  In this case, the following happens:
 
@@ -112,6 +116,7 @@ To use this as the basis of your own application, you'll want to:
 * Change the code in `main.py` so that it:
     * Makes use of any additional data items that you asked the user for.
     * Implements your application logic in the `application_mode` function, including any additional web listener routes.  The [Phew! documentation](https://github.com/pimoroni/phew) will be helpful here.
+* Change the code for the `/temperature` route in `main.py` (function name is `app_get_temperature`).  Modify this to connect to a real sensor, rename it, make it do what you like!  Check out the embedded JavaScript in `app_templates/index.html` to see how the front end polls this route periodically.
 
 What sort of thing could you build?  This probably depends on what you plan to attach to your Pi Pico W. for example, you might build a [Cheerlights](https://cheerlights.com/) display with an LED matrix, or a weather station with an e-ink screen and various environment sensors.
 
