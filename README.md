@@ -73,7 +73,7 @@ Here's what the page looks like on an iPhone:
 
 ![Wifi setup page](wifi_setup.jpg)
 
-Once you hit "Save", the Pi Pico W will reset and attempt to connect to your wifi:
+Once you hit "Save", the Pi Pico W will reset and attempt to connect to your wifi (here it's attempting to connect to an SSID named "ssmesh"):
 
 ![Wifi configured](wifi_configured.jpg)
 
