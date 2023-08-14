@@ -22,8 +22,8 @@ def setup_mode():
     print("Entering setup mode...")
     
     def ap_index(request):
-        if request.headers.get("host") != AP_DOMAIN:
-            return render_template(f"{AP_TEMPLATE_PATH}/redirect.html", domain = AP_DOMAIN)
+        if request.headers.get("host").lower() != AP_DOMAIN.lower():
+            return render_template(f"{AP_TEMPLATE_PATH}/redirect.html", domain = AP_DOMAIN.lower())
 
         return render_template(f"{AP_TEMPLATE_PATH}/index.html")
 
